@@ -59,6 +59,20 @@ PhaserGame.prototype = {
           return;
         }
       }
+
+      var otherTurrets = this.turrets.children;
+
+      for (i = 0; i < otherTurrets.length; i += 1) {
+        console.log(event)
+        console.log(otherTurrets[i].position)
+        if (event.x > otherTurrets[i].position.x &&
+            event.x < otherTurrets[i].position.x + 100 &&
+            event.y > otherTurrets[i].position.y &&
+            event.y < otherTurrets[i].position.y + 120) {
+          return;
+        }
+      }
+
       this.turrets.create(event.x - 50, event.y - 50, 'tower');
     },
 
