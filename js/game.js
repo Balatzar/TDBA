@@ -54,7 +54,11 @@ PhaserGame.prototype = {
     },
 
     addTurret(event) {
-      console.log(event)
+      for (i = 0; i < this.path.length; i += 1) {
+        if (event.y < this.path[i].y + 100 && event.y > this.path[i].y - 100 && event.x ===  Math.round(this.path[i].x)) {
+          return;
+        }
+      }
       this.turrets.create(event.x - 50, event.y - 50, 'tower');
     },
 
@@ -83,7 +87,7 @@ PhaserGame.prototype = {
         var px = this.math.bezierInterpolation(this.points.x, i);
         var py = this.math.bezierInterpolation(this.points.y, i);
 
-        this.bmd.rect(px, py, 1, 1, 'rgba(255, 255, 255, 1)');
+        this.bmd.rect(px, py, 10, 10, 'rgba(255, 255, 255, 1)');
 
         var node = { x: px, y: py, angle: 0 };
 
