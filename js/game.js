@@ -14,6 +14,8 @@ var PhaserGame = function() {
     this.pi = 0;
     this.path = [];
 
+    this.alive = 0;
+
 };
 
 PhaserGame.prototype = {
@@ -39,10 +41,8 @@ PhaserGame.prototype = {
       this.bmd = this.add.bitmapData(this.game.width, this.game.height);
       this.bmd.addToWorld();
 
-      var py = this.points.y;
-
-      for (var i = 0; i < py.length; i++) {
-        py[i] = this.rnd.between(32, 432);
+      for (var i = 0; i < this.points.y.length; i++) {
+        this.points.y[i] = this.rnd.between(32, 432);
       }
 
       this.plot();
@@ -57,6 +57,9 @@ PhaserGame.prototype = {
 
       this.input.onDown.add(this.addTurret, this);
 
+      this.lives = 10;
+      this.livesText = game.add.text(16, 16, `Vies : ${this.lives}`, { fontSize: '32px', fill: '#000' });
+
     },
 
     createBad() {
@@ -66,6 +69,8 @@ PhaserGame.prototype = {
       this.bad.enableBody = true;
       this.bad.life = 100;
       this.bad.frozen = false;
+
+      this.alive += 1;
 
     },
 
@@ -91,12 +96,11 @@ PhaserGame.prototype = {
     },
 
     shoot(bad, bullet) {
-      console.log(this)
       bullet.kill();
-      console.log(this.bullets)
       bad.life -= 10;
       if (!bad.life) {
         bad.kill();
+        this.alive -= 1;
         this.bullets.removeChildren();
         return;
       }
@@ -115,14 +119,17 @@ PhaserGame.prototype = {
       }
 
       if (this.pi >= this.path.length) {
+        this.lives -= 1;
+        this.livesText.text = `Vies : ${this.lives}`;
         this.pi = 0;
       }
 
       var turrets = this.turrets.children;
       var bullets = this.bullets.children;
+      console.log(this.alive)
 
       turrets.forEach(t => {
-        if (!t.shooting) {
+        if (!t.shooting && this.alive) {
           t.shooting = true;
           var bullet = this.bullets.create(t.position.x + 50, t.position.y + 50, 'bullet');
           bullet.turret = t;
@@ -137,10 +144,8 @@ PhaserGame.prototype = {
 
     plot() {
 
-      this.bmd.clear();
-
       var x = 1 / game.width;
-      var ix = 0;
+      var j = 0;
 
       for (var i = 0; i <= 1; i += x) {
         var px = this.math.bezierInterpolation(this.points.x, i);
@@ -150,12 +155,12 @@ PhaserGame.prototype = {
 
         var node = { x: px, y: py, angle: 0 };
 
-        if (ix > 0) {
-          node.angle = this.math.angleBetweenPoints(this.path[ix - 1], node);
+        if (j > 0) {
+          node.angle = this.math.angleBetweenPoints(this.path[j - 1], node);
         }
 
         this.path.push(node);
-        ix += 1
+        j += 1
       }
 
     }
