@@ -28,9 +28,12 @@ PhaserGame.prototype = {
       this.load.image('bad', 'assets/bad.png');
       this.load.image('tower', 'assets/tower.png');
       this.load.image('ground', 'assets/ground.jpg');
+      this.load.image('bullet', 'assets/bullet.png');
     },
 
     create() {
+      this.physics.startSystem(Phaser.Physics.ARCADE);
+
       this.add.sprite(0, 0, 'ground');
 
       this.bmd = this.add.bitmapData(this.game.width, this.game.height);
@@ -44,12 +47,25 @@ PhaserGame.prototype = {
 
       this.plot();
 
-      this.bad = this.add.sprite(0, 0, 'bad');
-      this.bad.anchor.set(0.5);
+      this.createBad();
 
       this.turrets = this.add.group();
+      this.bullets = this.add.group();
+      this.bullets.enableBody = true;
+
+      game.physics.arcade.enable([this.bad]);
 
       this.input.onDown.add(this.addTurret, this);
+
+    },
+
+    createBad() {
+
+      this.bad = this.add.sprite(0, 0, 'bad');
+      this.bad.anchor.set(0.5);
+      this.bad.enableBody = true;
+      this.bad.life = 100;
+      this.bad.frozen = false;
 
     },
 
@@ -63,8 +79,6 @@ PhaserGame.prototype = {
       var otherTurrets = this.turrets.children;
 
       for (i = 0; i < otherTurrets.length; i += 1) {
-        console.log(event)
-        console.log(otherTurrets[i].position)
         if (event.x > otherTurrets[i].position.x &&
             event.x < otherTurrets[i].position.x + 100 &&
             event.y > otherTurrets[i].position.y &&
@@ -76,17 +90,48 @@ PhaserGame.prototype = {
       this.turrets.create(event.x - 50, event.y - 50, 'tower');
     },
 
+    shoot(bad, bullet) {
+      console.log(this)
+      bullet.kill();
+      console.log(this.bullets)
+      bad.life -= 10;
+      if (!bad.life) {
+        bad.kill();
+        this.bullets.removeChildren();
+        return;
+      }
+      bullet.turret.shooting = false;
+    },
+
     update() {
+      var shooting = this.physics.arcade.overlap(this.bad, this.bullets, this.shoot.bind(this));
 
-      this.bad.x = this.path[this.pi].x;
-      this.bad.y = this.path[this.pi].y;
-      this.bad.rotation = this.path[this.pi].angle;
+      if (!this.bad.frozen) {
+        this.bad.x = this.path[this.pi].x;
+        this.bad.y = this.path[this.pi].y;
+        this.bad.rotation = this.path[this.pi].angle;
 
-      this.pi++;
+        this.pi++;
+      }
 
       if (this.pi >= this.path.length) {
         this.pi = 0;
       }
+
+      var turrets = this.turrets.children;
+      var bullets = this.bullets.children;
+
+      turrets.forEach(t => {
+        if (!t.shooting) {
+          t.shooting = true;
+          var bullet = this.bullets.create(t.position.x + 50, t.position.y + 50, 'bullet');
+          bullet.turret = t;
+        }
+      });
+
+      bullets.forEach(b => {
+        this.physics.arcade.moveToObject(b, this.bad, 200)
+      });
 
     },
 
